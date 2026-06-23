@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["CWY7GH5697.com.agreenow.app"],
+        "paths": ["/sign/*"]
+      }
+    ]
+  }
+}
