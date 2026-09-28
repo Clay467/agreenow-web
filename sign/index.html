@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Agreement — AgreeNow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fafafa;
+      color: #1a1a1a;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    /* Loading State */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+    }
+    
+    .spinner {
+      border: 3px solid #e0e0e0;
+      border-top: 3px solid #1a1a1a;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Error State */
+    .error-container {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    
+    .error-container h1 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      color: #d32f2f;
+    }
+    
+    .error-container p {
+      color: #666;
+      margin-bottom: 24px;
+    }
+    
+    /* Agreement Content */
+    .agreement {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 32px;
+      margin: 20px 0;
+    }
+    
+    .agreement h1 {
+      font-size: 1.75rem;
+      margin-bottom: 24px;
+      line-height: 1.3;
+    }
+    
+    .agreement h2 {
+      font-size: 1.25rem;
+      margin-top: 32px;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+    
+    .agreement p {
+      margin-bottom: 16px;
+    }
+    
+    .field-value {
+      font-weight: 600;
+    }
+    
+    .field-input {
+      display: inline-block;
+      min-width: 150px;
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    
+    .field-input:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+    
+    .field-label {
+      display: block;
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+    
+    .field-block {
+      margin: 16px 0;
+    }
+    
+    .field-block input,
+    .field-block select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    
+    .field-block input:focus,
+    .field-block select:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+    
+    .required {
+      color: #d32f2f;
+    }
+    
+    /* Signature Blocks */
+    .signature-block {
+      margin: 24px 0;
+      padding: 20px;
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+    }
+    
+    .signature-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .signature-image {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: white;
+      padding: 8px;
+    }
+    
+    .signature-button {
+      width: 100%;
+      padding: 16px;
+      background: white;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .signature-button:hover {
+      border-color: #1a1a1a;
+      color: #1a1a1a;
+    }
+    
+    .signature-button.signed {
+      border-style: solid;
+      border-color: #4caf50;
+      color: #4caf50;
+    }
+    
+    .signature-preview {
+      margin-top: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: white;
+      padding: 8px;
+    }
+    
+    .signature-preview img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Signature Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    
+    #signature-canvas {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+    
+    .btn-primary {
+      background: #1a1a1a;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #333;
+    }
+    
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: #1a1a1a;
+      border: 1px solid #ccc;
+    }
+    
+    .btn-secondary:hover {
+      background: #f5f5f5;
+    }
+    
+    .submit-container {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .validation-errors {
+      background: #ffebee;
+      border: 1px solid #ef9a9a;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+      color: #c62828;
+    }
+    
+    .validation-errors ul {
+      margin-left: 20px;
+    }
+    
+    /* Success State */
+    .success-container {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 40px 32px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: #4caf50;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 2rem;
+      color: white;
+    }
+    
+    .success-container h1 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      color: #2e7d32;
+    }
+    
+    .success-container p {
+      color: #666;
+    }
+    
+    /* Hidden class */
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 600px) {
+      .container {
+        padding: 12px;
+      }
+      
+      .agreement {
+        padding: 20px;
+      }
+      
+      .modal-content {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Loading State -->
+    <div id="loading-state" class="loading">
+      <div class="spinner"></div>
+      <p>Loading agreement...</p>
+    </div>
+    
+    <!-- Error State -->
+    <div id="error-state" class="hidden">
+      <div class="error-container">
+        <h1 id="error-title">Error</h1>
+        <p id="error-message"></p>
+      </div>
+    </div>
+    
+    <!-- Agreement Content -->
+    <div id="agreement-state" class="hidden">
+      <div class="agreement">
+        <div id="agreement-content"></div>
+        
+        <div class="submit-container">
+          <div id="validation-errors" class="validation-errors hidden"></div>
+          <button id="submit-btn" class="btn btn-primary">Sign Agreement</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Success State -->
+    <div id="success-state" class="hidden">
+      <div class="success-container">
+        <div class="success-icon">✓</div>
+        <h1>Agreement Signed Successfully!</h1>
+        <p>Both parties will receive a copy of the completed agreement.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Signature Modal -->
+  <div id="signature-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Draw Your Signature</div>
+      <canvas id="signature-canvas" width="460" height="200"></canvas>
+      <div class="modal-actions">
+        <button id="clear-signature-btn" class="btn btn-secondary">Clear</button>
+        <button id="save-signature-btn" class="btn btn-primary">Done</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Load dependencies from CDN -->
+  <script src="https://unpkg.com/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // Configuration
+    const SUPABASE_URL = 'https://slmacxrupgnsebafrfco.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsbWFjeHJ1cGduc2ViYWZyZmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NjkwMTQsImV4cCI6MjA4MDQ0NTAxNH0.SrSAOhqbO6-dlvWq7DcmdM8gxuJkr_X6xyEZ2aTG6aM';
+    
+    // US States data
+    const US_STATES = [
+      { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' },
+      { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' },
+      { name: 'Connecticut', abbr: 'CT' }, { name: 'Delaware', abbr: 'DE' }, { name: 'District of Columbia', abbr: 'DC' },
+      { name: 'Florida', abbr: 'FL' }, { name: 'Georgia', abbr: 'GA' }, { name: 'Hawaii', abbr: 'HI' },
+      { name: 'Idaho', abbr: 'ID' }, { name: 'Illinois', abbr: 'IL' }, { name: 'Indiana', abbr: 'IN' },
+      { name: 'Iowa', abbr: 'IA' }, { name: 'Kansas', abbr: 'KS' }, { name: 'Kentucky', abbr: 'KY' },
+      { name: 'Louisiana', abbr: 'LA' }, { name: 'Maine', abbr: 'ME' }, { name: 'Maryland', abbr: 'MD' },
+      { name: 'Massachusetts', abbr: 'MA' }, { name: 'Michigan', abbr: 'MI' }, { name: 'Minnesota', abbr: 'MN' },
+      { name: 'Mississippi', abbr: 'MS' }, { name: 'Missouri', abbr: 'MO' }, { name: 'Montana', abbr: 'MT' },
+      { name: 'Nebraska', abbr: 'NE' }, { name: 'Nevada', abbr: 'NV' }, { name: 'New Hampshire', abbr: 'NH' },
+      { name: 'New Jersey', abbr: 'NJ' }, { name: 'New Mexico', abbr: 'NM' }, { name: 'New York', abbr: 'NY' },
+      { name: 'North Carolina', abbr: 'NC' }, { name: 'North Dakota', abbr: 'ND' }, { name: 'Ohio', abbr: 'OH' },
+      { name: 'Oklahoma', abbr: 'OK' }, { name: 'Oregon', abbr: 'OR' }, { name: 'Pennsylvania', abbr: 'PA' },
+      { name: 'Rhode Island', abbr: 'RI' }, { name: 'South Carolina', abbr: 'SC' }, { name: 'South Dakota', abbr: 'SD' },
+      { name: 'Tennessee', abbr: 'TN' }, { name: 'Texas', abbr: 'TX' }, { name: 'Utah', abbr: 'UT' },
+      { name: 'Vermont', abbr: 'VT' }, { name: 'Virginia', abbr: 'VA' }, { name: 'Washington', abbr: 'WA' },
+      { name: 'West Virginia', abbr: 'WV' }, { name: 'Wisconsin', abbr: 'WI' }, { name: 'Wyoming', abbr: 'WY' }
+    ];
+    
+    // Global state
+    let agreementData = null;
+    let fieldValues = {};
+    let signatures = {};
+    let currentSignatureField = null;
+    let signaturePad = null;
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Parse URL parameters
+    function getUrlParams() {
+      const url = window.location.href;
+      const pathMatch = url.match(/\/sign\/([^?]+)/);
+      const params = new URLSearchParams(window.location.search);
+      
+      return {
+        agreementId: pathMatch ? pathMatch[1] : null,
+        token: params.get('token')
+      };
+    }
+    
+    // Show/hide states
+    function showState(stateName) {
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('error-state').classList.add('hidden');
+      document.getElementById('agreement-state').classList.add('hidden');
+      document.getElementById('success-state').classList.add('hidden');
+      
+      if (stateName) {
+        document.getElementById(stateName + '-state').classList.remove('hidden');
+      }
+    }
+    
+    // Show error
+    function showError(title, message) {
+      document.getElementById('error-title').textContent = title;
+      document.getElementById('error-message').textContent = message;
+      showState('error');
+    }
+    
+    // Initialize signature pad
+    function initSignaturePad() {
+      const canvas = document.getElementById('signature-canvas');
+      signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(0, 0, 0)'
+      });
+      
+      // Handle window resize
+      function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        signaturePad.clear();
+      }
+      
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+    }
+    
+    // Open signature modal
+    function openSignatureModal(fieldKey) {
+      currentSignatureField = fieldKey;
+      signaturePad.clear();
+      
+      // If there's an existing signature, load it
+      if (signatures[fieldKey]) {
+        const img = new Image();
+        img.onload = function() {
+          const ctx = document.getElementById('signature-canvas').getContext('2d');
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = signatures[fieldKey];
+      }
+      
+      document.getElementById('signature-modal').classList.add('active');
+    }
+    
+    // Close signature modal
+    function closeSignatureModal() {
+      document.getElementById('signature-modal').classList.remove('active');
+      currentSignatureField = null;
+    }
+    
+    // Save signature
+    function saveSignature() {
+      if (signaturePad.isEmpty()) {
+        alert('Please provide a signature');
+        return;
+      }
+      
+      const dataUrl = signaturePad.toDataURL();
+      signatures[currentSignatureField] = dataUrl;
+      
+      // Update UI
+      const button = document.querySelector(`[data-field="${currentSignatureField}"]`);
+      button.classList.add('signed');
+      button.textContent = '✓ Signature captured (tap to redo)';
+      
+      // Show preview
+      let preview = button.nextElementSibling;
+      if (!preview || !preview.classList.contains('signature-preview')) {
+        preview = document.createElement('div');
+        preview.className = 'signature-preview';
+        button.parentNode.insertBefore(preview, button.nextSibling);
+      }
+      preview.innerHTML = `<img src="${dataUrl}" alt="Your signature" />`;
+      
+      closeSignatureModal();
+    }
+    
+    // Render field based on type
+    function renderField(field, value, signatureUrls) {
+      const fieldSchema = agreementData.template.fields_schema.fields.find(f => f.key === field.key);
+      if (!fieldSchema) return '';
+      
+      const isRequired = fieldSchema.required;
+      const requiredMark = isRequired ? '<span class="required">*</span>' : '';
+      
+      // Sender fields - display as bold text or image
+      if (fieldSchema.party === 'sender') {
+        if (fieldSchema.type === 'signature' && signatureUrls[field.key]) {
+          return `<img src="${signatureUrls[field.key]}" alt="Sender signature" class="signature-image" />`;
+        }
+        return `<span class="field-value">${value || ''}</span>`;
+      }
+      
+      // Recipient fields - display as inputs
+      const fieldId = `field-${field.key}`;
+      
+      switch (fieldSchema.type) {
+        case 'text':
+        case 'name':
+        case 'number':
+        case 'currency':
+          return `<input type="text" id="${fieldId}" class="field-input" data-field="${field.key}" value="${value || ''}" />`;
+        
+        case 'date':
+          return `<input type="date" id="${fieldId}" class="field-input" data-field="${field.key}" value="${value || ''}" />`;
+        
+        case 'state':
+          const stateOptions = US_STATES.map(state => 
+            `<option value="${state.abbr}" ${value === state.abbr ? 'selected' : ''}>${state.name}</option>`
+          ).join('');
+          return `<select id="${fieldId}" class="field-input" data-field="${field.key}">
+            <option value="">Select state...</option>
+            ${stateOptions}
+          </select>`;
+        
+        case 'signature':
+          return ''; // Handled separately in signature blocks
+        
+        default:
+          return `<input type="text" id="${fieldId}" class="field-input" data-field="${field.key}" value="${value || ''}" />`;
+      }
+    }
+    
+    // Render agreement content
+    function renderAgreement(data) {
+      agreementData = data;
+      const container = document.getElementById('agreement-content');
+      const content = data.template.content;
+      const fields = data.agreement.fields || {};
+      const signatureUrls = data.signature_urls || {};
+      const fieldsSchema = data.template.fields_schema.fields;
+      
+      let html = '';
+      
+      // Render each content block
+      content.forEach(block => {
+        if (block.type === 'h1') {
+          html += `<h1>${block.text}</h1>`;
+        } else if (block.type === 'h2') {
+          html += `<h2>${block.text}</h2>`;
+        } else if (block.type === 'p') {
+          let text = block.text;
+          
+          // Replace field tokens with actual inputs or values
+          const tokenRegex = /\{\{(\w+)\}\}/g;
+          text = text.replace(tokenRegex, (match, fieldKey) => {
+            const field = { key: fieldKey };
+            const value = fields[fieldKey];
+            return renderField(field, value, signatureUrls);
+          });
+          
+          html += `<p>${text}</p>`;
+        } else if (block.type === 'signature') {
+          const field = block.fields[0];
+          if (!field) return;
+          
+          const fieldSchema = fieldsSchema.find(f => f.key === field.key);
+          if (!fieldSchema) return;
+          
+          const isRequired = fieldSchema.required;
+          const requiredMark = isRequired ? '<span class="required">*</span>' : '';
+          
+          html += '<div class="signature-block">';
+          html += `<span class="signature-label">${field.label} ${requiredMark}</span>`;
+          
+          if (fieldSchema.party === 'sender') {
+            // Sender signature - show image
+            if (signatureUrls[field.key]) {
+              html += `<img src="${signatureUrls[field.key]}" alt="${field.label}" class="signature-image" />`;
+            }
+          } else {
+            // Recipient signature - show button
+            html += `<button type="button" class="signature-button" data-field="${field.key}" onclick="openSignatureModal('${field.key}')">Tap to sign</button>`;
+          }
+          
+          html += '</div>';
+        }
+      });
+      
+      // Add any remaining recipient fields that aren't in content blocks
+      fieldsSchema.forEach(fieldSchema => {
+        if (fieldSchema.party === 'recipient' && fieldSchema.type !== 'signature') {
+          const hasToken = content.some(block => 
+            block.type === 'p' && block.text.includes(`{{${fieldSchema.key}}}`)
+          );
+          
+          if (!hasToken) {
+            const isRequired = fieldSchema.required;
+            const requiredMark = isRequired ? '<span class="required">*</span>' : '';
+            const value = fields[fieldSchema.key] || '';
+            
+            html += '<div class="field-block">';
+            html += `<label class="field-label">${fieldSchema.label} ${requiredMark}</label>`;
+            html += renderField({ key: fieldSchema.key }, value, signatureUrls);
+            html += '</div>';
+          }
+        }
+      });
+      
+      container.innerHTML = html;
+      
+      // Attach event listeners to inputs
+      document.querySelectorAll('[data-field]').forEach(input => {
+        if (input.tagName === 'INPUT' || input.tagName === 'SELECT') {
+          input.addEventListener('change', (e) => {
+            fieldValues[e.target.dataset.field] = e.target.value;
+          });
+          
+          // Initialize fieldValues
+          fieldValues[input.dataset.field] = input.value;
+        }
+      });
+      
+      showState('agreement');
+    }
+    
+    // Validate form
+    function validateForm() {
+      const errors = [];
+      const fieldsSchema = agreementData.template.fields_schema.fields;
+      
+      fieldsSchema.forEach(field => {
+        if (field.party === 'recipient' && field.required) {
+          if (field.type === 'signature') {
+            if (!signatures[field.key]) {
+              errors.push(`${field.label} is required`);
+            }
+          } else {
+            const value = fieldValues[field.key];
+            if (!value || value.trim() === '') {
+              errors.push(`${field.label} is required`);
+            }
+          }
+        }
+      });
+      
+      return errors;
+    }
+    
+    // Show validation errors
+    function showValidationErrors(errors) {
+      const container = document.getElementById('validation-errors');
+      if (errors.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+      
+      const errorList = errors.map(err => `<li>${err}</li>`).join('');
+      container.innerHTML = `<strong>Please complete all required fields:</strong><ul>${errorList}</ul>`;
+      container.classList.remove('hidden');
+      
+      // Scroll to errors
+      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
+    // Submit agreement
+    async function submitAgreement() {
+      // Validate
+      const errors = validateForm();
+      if (errors.length > 0) {
+        showValidationErrors(errors);
+        return;
+      }
+      
+      // Hide errors
+      showValidationErrors([]);
+      
+      // Disable submit button
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      
+      try {
+        const { agreementId, token } = getUrlParams();
+        
+        // Prepare signatures (convert to base64)
+        const signatureData = {};
+        Object.entries(signatures).forEach(([key, dataUrl]) => {
+          signatureData[key] = dataUrl;
+        });
+        
+        // Call submit edge function
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/submit-web-signature`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            agreement_id: agreementId,
+            token: token,
+            field_values: fieldValues,
+            signatures: signatureData
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Submission failed');
+        }
+        
+        // Success!
+        showState('success');
+      } catch (error) {
+        console.error('Submission error:', error);
+        alert('Failed to submit agreement. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign Agreement';
+      }
+    }
+    
+    // Load agreement
+    async function loadAgreement() {
+      try {
+        const { agreementId, token } = getUrlParams();
+        
+        if (!agreementId || !token) {
+          showError('Invalid Link', 'This signing link is malformed. Please check the URL and try again.');
+          return;
+        }
+        
+        // Call validate edge function
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/validate-signing-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            agreement_id: agreementId,
+            token: token
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            showError('Invalid Link', data.error || 'This signing link is not valid.');
+          } else if (response.status === 410) {
+            if (data.error.includes('expired')) {
+              showError('Link Expired', 'This signing link has expired. Please contact the sender for a new link.');
+            } else if (data.error.includes('already been signed')) {
+              showError('Already Signed', 'This agreement has already been signed.');
+            } else {
+              showError('Link Expired', data.error);
+            }
+          } else {
+            showError('Error', data.error || 'An error occurred while loading the agreement.');
+          }
+          return;
+        }
+        
+        // Render agreement
+        renderAgreement(data);
+      } catch (error) {
+        console.error('Load error:', error);
+        showError('Error', 'Failed to load agreement. Please check your connection and try again.');
+      }
+    }
+    
+    // Event listeners
+    document.getElementById('submit-btn').addEventListener('click', submitAgreement);
+    document.getElementById('clear-signature-btn').addEventListener('click', () => {
+      signaturePad.clear();
+    });
+    document.getElementById('save-signature-btn').addEventListener('click', saveSignature);
+    
+    // Close modal on background click
+    document.getElementById('signature-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'signature-modal') {
+        closeSignatureModal();
+      }
+    });
+    
+    // Initialize
+    initSignaturePad();
+    loadAgreement();
+  </script>
+</body>
+</html>
