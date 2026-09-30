@@ -1,0 +1,18 @@
+{
+  // Static site for agreenow.app, served by Workers static assets.
+  // Previously this file was auto-generated on every build and gitignored,
+  // which left the deploy config unversioned. Committing it makes the
+  // asset directory and ignore behaviour explicit and reviewable.
+  "name": "agreenow-web",
+  "compatibility_date": "2026-09-28",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    // Site files live in ./public so that repo internals (.git, .wrangler,
+    // README, this config) are structurally outside the served directory.
+    // Previously this was "." — the whole repo root — which uploaded .git
+    // objects as publicly fetchable assets.
+    "directory": "./public"
+  }
+}
